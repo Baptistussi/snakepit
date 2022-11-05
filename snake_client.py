@@ -4,7 +4,7 @@ import pickle
 import socket
 import threading
 
-from game import Client_Game
+from libgame import Client_Game
 from libsnake import Messages, Client_Snake
 
 PORT = 5051

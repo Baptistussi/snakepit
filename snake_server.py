@@ -4,12 +4,12 @@ import sys
 import pickle
 
 import colors
-from game import Server_Game
+from libgame import Server_Game
 from libsnake import Messages, Server_Snake
 
 class Server(Messages):
     PORT = 5051
-    HOST = '192.168.0.17' #socket.gethostbyname(socket.gethostname())
+    HOST = socket.gethostbyname(socket.gethostname())
     ADDR = (HOST, PORT)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connections = []
