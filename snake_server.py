@@ -8,14 +8,15 @@ from libgame import Server_Game
 from libsnake import Messages, Server_Snake
 
 class Server(Messages):
-    PORT = 5051
-    HOST = socket.gethostbyname(socket.gethostname())
+    PORT = 5050
+    HOST = '192.168.0.17' #socket.gethostbyname(socket.gethostname())
     ADDR = (HOST, PORT)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connections = []
     DISCONNECT_MESSAGE = '!DISCONNECT'
 
     def __init__(self):
+        self.sock.settimeout(1) # important so it finishes properly
         self.sock.bind(self.ADDR)
         self.sock.listen()
         print("[STARTING] server is starting...")
@@ -63,15 +64,14 @@ class Server(Messages):
             self.run_game()
 
     def interpret_msg(self, msg, sender_name):
-        msg_dict = pickle.loads(msg)
-        mtype = msg_dict['type']
+        mtype = msg['type']
         
         match mtype:
             case 'player_ready':
                 self.players[ sender_name ].ready = True
                 self.check_all_ready()
             case 'command':
-                self.game.control(sender_name, msg_dict['key'])
+                self.game.control(sender_name, msg['key'])
 
     def client_handler(self, conn, addr):
         "Handles connection with each client player."
@@ -96,24 +96,27 @@ class Server(Messages):
                 
         connected = True
         while connected:
-            msg = self.recvMsg(conn, decode=False)
+            msg = pickle.loads( self.recvMsg(conn, decode=False) )
             if not msg or msg == self.DISCONNECT_MESSAGE:
                 connected = False
                 self.connections.remove(conn)
-                self.player_disconnect(name=player_name)
+                self.player_disconnect(player_name=player_name)
             else:
                 self.interpret_msg(msg=msg, sender_name=player_name)
         conn.close()
     
     def run_server(self):
         print(f"[LISTENING] Server is listening on {self.HOST}.")
-        while True:
-            conn, addr = self.sock.accept()
-            client_thread = threading.Thread(target=self.client_handler, args=(conn, addr) )
-            client_thread.daemon = True
-            client_thread.start()
-            self.connections.append(conn)
-            print(f"[ACTIVE CONNECTIONS] {threading.active_count() -1 }" )
+        while not self.game.game_over:
+            try:
+                conn, addr = self.sock.accept()
+                client_thread = threading.Thread(target=self.client_handler, args=(conn, addr) )
+                client_thread.daemon = True
+                client_thread.start()
+                self.connections.append(conn)
+                print(f"[ACTIVE CONNECTIONS] {threading.active_count() -1 }" )
+            except socket.timeout:
+                pass
     
     def run_game(self):
         main_game_thread = threading.Thread(target=self.game.loop_game)

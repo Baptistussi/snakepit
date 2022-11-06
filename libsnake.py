@@ -62,7 +62,7 @@ class Server_Snake:
         if np.array( [ (head == part).all() for part in self.snake_queue ] ).sum() > 1 or \
             any(head < 0) or any(head > self.env.windowSize): # if the head is anywhere outside the window boundaries
             self.alive = False
-            return False
+            return False            
         return True
     
     def update(self):
@@ -86,7 +86,7 @@ class Server_Snake:
                 self.snake_queue.pop(0)
 
         # check if the snake is dead and return the result
-        return self.check_death(head)
+        self.alive = self.check_death(head)
     
     def report(self):
         snake_data = { 'alive': self.alive,

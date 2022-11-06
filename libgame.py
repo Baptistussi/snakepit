@@ -73,6 +73,7 @@ class Server_Game:
     windowSize = np.array((50,50))
     freq = 10
     has_food = False
+    game_over = False
 
     def __init__(self, web_interface, snakes):
         self.clock = Ticker(self.freq)
@@ -114,4 +115,5 @@ class Server_Game:
                 self.update_snakes()
                 self.update_food()
         
+        self.game_over = True
         self.web_interface.end_game()

@@ -7,7 +7,7 @@ import threading
 from libgame import Client_Game
 from libsnake import Messages, Client_Snake
 
-PORT = 5051
+PORT = 5050
 
 class GameAPI(Client_Game):
     def initialize_snake(self, player_data):
@@ -51,6 +51,7 @@ class Client(Messages):
         match mtype:
             case 'new_player':
                 self.game_api.initialize_snake( msg_dict['player_data'] )
+                print(f"{msg_dict['player_data']['name']}'s color is {msg_dict['player_data']['color'][0]}")
             case 'player_disconnect':
                 self.game_api.drop_foe_player( msg_dict['player_name'] )
             case 'all_players_ready':
@@ -94,7 +95,7 @@ class Client(Messages):
             msg = self.recvMsg(self.sock, decode=False)
             self.interpret_msg(msg)
         # end of game
-        self.sendMsg(self.sock, self.DISCONNECT_MESSAGE)
+        self.sendMsg(self.sock, pickle.dumps(self.DISCONNECT_MESSAGE), encode=False )
 
 if __name__ == "__main__":
     client = Client((sys.argv[1], PORT))
