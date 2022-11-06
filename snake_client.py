@@ -67,9 +67,17 @@ class Client(Messages):
     def publish_command(self, key):
         msg = { 'type':'command',
                 'key': key }
-        self.sendMsg( self.sock, pickle.dumps(msg), encode=False ) 
+        self.sendMsg( self.sock, pickle.dumps(msg), encode=False )
     
-    def run(self):
+    def subscriber(self):
+        # game loop
+        while self.client_alive:
+            msg = self.recvMsg(self.sock, decode=False)
+            self.interpret_msg(msg)
+        # end of game
+        self.sendMsg(self.sock, pickle.dumps(self.DISCONNECT_MESSAGE), encode=False )
+    
+    def launch(self):
         # name setting loop
         has_name = False
         while not has_name:
@@ -82,23 +90,20 @@ class Client(Messages):
             else:
                 print("Name already taken. Try again.")
 
+        # start subscriber thread
+        thread = threading.Thread(target=self.subscriber)
+        thread.daemon = True
+        thread.start()
         # wait other players
         print("Waiting for other players")
         time.sleep(5)
         # wait player ready
         input("Press ENTER when you're ready.")
         msg = { 'type':'player_ready' }
-        self.sendMsg( self.sock, pickle.dumps(msg), encode=False ) 
-
-        # game loop
-        while self.client_alive:
-            msg = self.recvMsg(self.sock, decode=False)
-            self.interpret_msg(msg)
-        # end of game
-        self.sendMsg(self.sock, pickle.dumps(self.DISCONNECT_MESSAGE), encode=False )
+        self.sendMsg( self.sock, pickle.dumps(msg), encode=False )   
 
 if __name__ == "__main__":
     client = Client((sys.argv[1], PORT))
-    client.run()
+    client.launch()
     input('Game over. Press Enter to exit.')
     sys.exit()
