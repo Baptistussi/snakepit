@@ -67,6 +67,8 @@ class Client_Game:
                 self.draw_snakes()
                 self.draw_food()
                 pygame.display.update()
+        input('Game over. Press Enter to exit.')
+        sys.exit()
         #print(f"Score: {len(self.snakes[ self.name ].snake_queue)}.")
 
 class Server_Game:

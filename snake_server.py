@@ -27,9 +27,10 @@ class Server(Messages):
         for conn in self.connections:
                 self.sendMsg(conn, msg, encode=False)
 
-    def new_player_connect(self, player_data):
-        msg = { 'type':'new_player',
-                'player_data': player_data }
+    def update_player_dict(self):
+        player_dict = { player.name: {'color':player.color}  for player in self.players.values() }
+        msg = { 'type':'update_player_dict',
+                'player_dict': player_dict }
         return self.broadcast( pickle.dumps(msg) )
 
     def player_disconnect(self, player_name):
@@ -91,9 +92,11 @@ class Server(Messages):
         self.players[ player_name ] = Server_Snake(self.game, player_name, player_color)
 
         # tell players of this player
-        self.new_player_connect( player_data={'name': player_name, 'color': player_color } )
+        self.update_player_dict()
         print(f"[NEW CONNECTION] {player_name} at {addr} connected.")
-                
+        # append player connection to the list
+        self.connections.append(conn)
+
         connected = True
         while connected:
             msg = pickle.loads( self.recvMsg(conn, decode=False) )
@@ -113,12 +116,12 @@ class Server(Messages):
                 client_thread = threading.Thread(target=self.client_handler, args=(conn, addr) )
                 client_thread.daemon = True
                 client_thread.start()
-                self.connections.append(conn)
                 print(f"[ACTIVE CONNECTIONS] {threading.active_count() -1 }" )
             except socket.timeout:
                 pass
     
     def run_game(self):
+        self.update_player_dict() # equalize player dict before starting the game
         main_game_thread = threading.Thread(target=self.game.loop_game)
         main_game_thread.daemon = True
         main_game_thread.start()

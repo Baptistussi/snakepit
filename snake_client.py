@@ -8,18 +8,21 @@ from libgame import Client_Game
 from libsnake import Messages, Client_Snake
 
 PORT = 5050
+WAIT_TIME = 3
 
 class GameAPI(Client_Game):
-    def initialize_snake(self, player_data):
-        print(f"New player connected: {player_data['name']}")
-        self.snakes[ player_data['name'] ] = Client_Snake(player_data['name'], player_data['color'])
+    def update_player_dict(self, server_player_dict):
+        new_players = set(server_player_dict.keys()) - set(self.snakes.keys())
+        for new_player in new_players:
+            print(f"New player connected: {new_player}, color: {server_player_dict[new_player]['color']}.")
+            self.snakes[ new_player ] = Client_Snake(new_player, server_player_dict[new_player]['color'])
 
     def drop_foe_player(self, player_name):
         self.snakes.pop(player_name)
 
     def start_game(self):
         thread = threading.Thread(target=self.run)
-        thread.daemon = True
+        thread.daemon = False
         thread.start()
 
     def update_snake(self, player_name, snake_data):
@@ -49,12 +52,12 @@ class Client(Messages):
         mtype = msg_dict['type']
         
         match mtype:
-            case 'new_player':
-                self.game_api.initialize_snake( msg_dict['player_data'] )
-                print(f"{msg_dict['player_data']['name']}'s color is {msg_dict['player_data']['color'][0]}")
+            case 'update_player_dict':
+                self.game_api.update_player_dict( msg_dict['player_dict'] )
             case 'player_disconnect':
                 self.game_api.drop_foe_player( msg_dict['player_name'] )
             case 'all_players_ready':
+                print('Game started.')
                 self.game_api.start_game()
             case 'snake_update':
                 self.game_api.update_snake( msg_dict['player_name'], msg_dict['snake_data'] )
@@ -92,18 +95,15 @@ class Client(Messages):
 
         # start subscriber thread
         thread = threading.Thread(target=self.subscriber)
-        thread.daemon = True
         thread.start()
         # wait other players
         print("Waiting for other players")
-        time.sleep(5)
+        time.sleep(WAIT_TIME)
         # wait player ready
-        input("Press ENTER when you're ready.")
+        input("Press ENTER when you're ready.\n")
         msg = { 'type':'player_ready' }
-        self.sendMsg( self.sock, pickle.dumps(msg), encode=False )   
+        self.sendMsg( self.sock, pickle.dumps(msg), encode=False )
 
 if __name__ == "__main__":
     client = Client((sys.argv[1], PORT))
     client.launch()
-    input('Game over. Press Enter to exit.')
-    sys.exit()
