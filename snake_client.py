@@ -7,7 +7,7 @@ import threading
 from libgame import Client_Game
 from libsnake import Messages, Client_Snake
 
-PORT = 5050
+PORT = 5051
 WAIT_TIME = 3
 
 class GameAPI(Client_Game):

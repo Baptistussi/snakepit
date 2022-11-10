@@ -105,7 +105,8 @@ class Server_Game:
             self.web_interface.update_snake(player_name, self.snakes[ player_name ].report() )
     
     def control(self, player_name, key):
-        self.snakes[ player_name ].move( self.controls[key] )
+        if key in self.controls.keys():
+            self.snakes[ player_name ].move( self.controls[key] )
     
     def loop_game(self):
         print("Starting Main Loop")

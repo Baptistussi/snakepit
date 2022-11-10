@@ -1,9 +1,7 @@
 function run of Class Client should create a subscriber in a specific thread, so it can accept other players connections before pressing ENTER to be ready - DONE
 
-update player list to all players whenever a player connects
+update player list to all players whenever a player connects - DONE
 
-handle player_ready message
+birth_place and direction must be random - DONE
 
-handle disconnect message
-
-birth_place and direction must be random
+fix disconnecting so it doesn't crash when a player leaves

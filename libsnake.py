@@ -43,7 +43,7 @@ class Server_Snake:
         self.env = env
         self.name = name
         self.color = color
-        self.birth_place = env.windowSize / 2
+        self.birth_place = env.random_place()
         self.snake_queue = [self.birth_place]
         self.ready = False
         self.alive = True
